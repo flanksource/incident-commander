@@ -8,22 +8,20 @@ RUN  ls && npm run build
 
 FROM golang:1.17 as builder
 WORKDIR /app
-COPY ./ ./
-
+COPY go.mod go.mod
+COPY go.sum go.sum
 ARG VERSION
-COPY go.mod /app/go.mod
-COPY go.sum /app/go.sum
 RUN go mod download
 COPY --from=node /app/build /app/ui/build
-WORKDIR /app
-RUN go version
+COPY ./ ./
 RUN make build
+
 FROM ubuntu:bionic
 WORKDIR /app
 
 # install CA certificates
 RUN apt-get update && \
-  apt-get install -y ca-certificates && \
+  apt-get install -y ca-certificates curl && \
   rm -Rf /var/lib/apt/lists/*  && \
   rm -Rf /usr/share/doc && rm -Rf /usr/share/man  && \
   apt-get clean
@@ -31,5 +29,4 @@ RUN apt-get update && \
 COPY --from=builder /app/.bin/incident-commander /app
 
 RUN /app/incident-commander go-offline
-
 ENTRYPOINT ["/app/incident-commander"]

@@ -103,6 +103,8 @@ test-e2e: bin
     tar xf kustomize.tar.gz -C .bin/ && \
 	rm kustomize.tar.gz
 
+.bin/air: .bin
+	curl -sSfL https://raw.githubusercontent.com/cosmtrek/air/master/install.sh | sh -s
 
 .PHONY: stack
 stack: .bin/kustomize
@@ -115,3 +117,7 @@ stack: .bin/kustomize
 chart:
 	helm dependency build ./chart
 	helm package ./chart
+
+.PHONY: run-dev
+run-dev: ui .bin/air
+	DB_URL=postgres://ic:ic@localhost:5432/ic ./bin/air -c .air.toml
